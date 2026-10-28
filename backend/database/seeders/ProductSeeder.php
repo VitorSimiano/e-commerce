@@ -10,11 +10,11 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // map "category name => id", so we never hardcode ids
+
         $categoryIds = Category::pluck('id', 'name');
 
         $products = [
-            // Brasil
+        
             [
                 'category'    => 'Brasil',
                 'name'        => 'Camisa Flamengo I 2025',
@@ -33,7 +33,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Camisa reserva do Corinthians.',
                 'price'       => '329.90',
                 'is_active'   => true,
-                'stock'       => ['P' => 5, 'M' => 3, 'G' => 0], // one size sold out
+                'stock'       => ['P' => 5, 'M' => 3, 'G' => 0], 
             ],
             [
                 'category'    => 'Brasil',
@@ -43,10 +43,10 @@ class ProductSeeder extends Seeder
                 'description' => 'Camisa titular do Palmeiras.',
                 'price'       => '339.90',
                 'is_active'   => true,
-                'stock'       => ['P' => 0, 'M' => 0, 'G' => 0], // fully sold out
+                'stock'       => ['P' => 0, 'M' => 0, 'G' => 0], 
             ],
 
-            // Espanha
+            
             [
                 'category'    => 'Espanha',
                 'name'        => 'Camisa Real Madrid I 2025',
@@ -64,11 +64,11 @@ class ProductSeeder extends Seeder
                 'season'      => '2025/26',
                 'description' => 'Camisa titular do Barcelona.',
                 'price'       => '429.90',
-                'is_active'   => false, // inactive: must not show in the catalog
+                'is_active'   => false,
                 'stock'       => ['P' => 6, 'M' => 6, 'G' => 6],
             ],
 
-            // Italia
+            
             [
                 'category'    => 'Italia',
                 'name'        => 'Camisa Inter de Milao I 2025',
@@ -80,7 +80,7 @@ class ProductSeeder extends Seeder
                 'stock'       => ['P' => 7, 'M' => 10, 'G' => 5],
             ],
 
-            // Inglaterra
+        
             [
                 'category'    => 'Inglaterra',
                 'name'        => 'Camisa Manchester United I 2025',
@@ -112,7 +112,6 @@ class ProductSeeder extends Seeder
                 'stock'       => ['P' => 6, 'M' => 0, 'G' => 5], // M sold out
             ],
 
-            // Selecoes Nacionais
             [
                 'category'    => 'Selecoes Nacionais',
                 'name'        => 'Camisa Selecao Brasileira I 2026',
