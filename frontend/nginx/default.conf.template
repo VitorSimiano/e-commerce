@@ -1,0 +1,20 @@
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # always revalidate, so edits show up on refresh while developing
+    add_header Cache-Control "no-cache";
+
+    # runtime config built from the API_URL environment variable
+    location = /js/config.js {
+        default_type application/javascript;
+        return 200 "window.APP_CONFIG = { API_URL: '${API_URL}' };";
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
