@@ -13,7 +13,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Brasil',             'league' => 'Brasileirao Serie A', 'flag' => '🇧🇷'],
             ['name' => 'Espanha',            'league' => 'La Liga',             'flag' => '🇪🇸'],
             ['name' => 'Italia',             'league' => 'Serie A',             'flag' => '🇮🇹'],
-            ['name' => 'Inglaterra',         'league' => 'Premier League',      'flag' => '🇬🇧'],
+            ['name' => 'Inglaterra',         'league' => 'Premier League',      'flag' => '🏴󠁧󠁢󠁥󠁮󠁧󠁿'],
             ['name' => 'Selecoes Nacionais', 'league' => 'Selecoes Nacionais',       'flag' => '🌍'],
         ];
 
