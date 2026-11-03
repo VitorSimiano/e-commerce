@@ -11,9 +11,14 @@ const els = {
   sizes: document.getElementById('p-sizes'),
   quantity: document.getElementById('p-quantity'),
   stockInfo: document.getElementById('p-stock-info'),
+  addButton: document.getElementById('add-to-cart'),
+  feedback: document.getElementById('cart-feedback'),
 };
 
 const SIZE_ORDER = ['P', 'M', 'G', 'GG'];
+
+// the variant (product + size) currently chosen: it is what goes into the cart
+let selectedVariant = null;
 
 function showError(message) {
   els.loading.classList.add('d-none');
@@ -22,12 +27,39 @@ function showError(message) {
   els.error.classList.remove('d-none');
 }
 
+function showFeedback(type, message, withCartLink = false) {
+  els.feedback.className = `alert alert-${type} mt-3`;
+  els.feedback.replaceChildren(document.createTextNode(message));
+
+  if (withCartLink) {
+    const link = el('a', 'alert-link ms-2', 'Ver carrinho');
+    link.href = '/cart.html';
+    els.feedback.appendChild(link);
+  }
+}
+
+function hideFeedback() {
+  els.feedback.className = 'd-none';
+}
+
+// Keeps the quantity between 1 and the stock of the chosen size
+function readQuantity() {
+  const max = Number(els.quantity.max) || 1;
+  const value = Math.floor(Number(els.quantity.value)) || 1;
+  const quantity = Math.min(Math.max(value, 1), max);
+  els.quantity.value = quantity;
+  return quantity;
+}
 
 function selectVariant(variant) {
+  selectedVariant = variant;
+  hideFeedback();
+
   els.quantity.disabled = false;
   els.quantity.max = variant.stock;
   els.quantity.value = 1;
   els.stockInfo.textContent = `${variant.stock} unidade(s) disponível(is) no tamanho ${variant.size}`;
+  els.addButton.disabled = false;
 }
 
 function renderSizes(variants) {
@@ -36,7 +68,7 @@ function renderSizes(variants) {
   const nodes = sorted.map((variant) => {
     const wrapper = el('div');
 
-
+   
     const input = el('input', 'btn-check');
     input.type = 'radio';
     input.name = 'size';
@@ -70,15 +102,44 @@ function renderProduct(product) {
 
   renderSizes(product.variants);
 
+  if (!product.in_stock) {
+    els.addButton.textContent = 'Produto esgotado';
+    els.stockInfo.textContent = 'Este produto está esgotado.';
+  }
+
   els.loading.classList.add('d-none');
   els.product.classList.remove('d-none');
 }
 
-els.quantity.addEventListener('change', () => {
-  const max = Number(els.quantity.max);
-  const value = Math.floor(Number(els.quantity.value)) || 1;
-  els.quantity.value = Math.min(Math.max(value, 1), max);
-});
+async function addToCart() {
+  if (!selectedVariant) return;
+
+  const quantity = readQuantity();
+  els.addButton.disabled = true;
+  hideFeedback();
+
+  try {
+    const cart = await CartApi.addItem(selectedVariant.id, quantity);
+    setCartBadge(cart.total_items);
+    showFeedback('success', `${quantity} item(ns) adicionado(s) ao carrinho.`, true);
+  } catch (error) {
+    console.error(error);
+
+    if (error.response && error.response.status === 422) {
+      showFeedback(
+        'warning',
+        'Não foi possível adicionar: a quantidade, somada ao que já está no seu carrinho, passa do estoque disponível.',
+      );
+    } else {
+      showFeedback('danger', errorMessage(error));
+    }
+  } finally {
+    els.addButton.disabled = false;
+  }
+}
+
+els.quantity.addEventListener('change', readQuantity);
+els.addButton.addEventListener('click', addToCart);
 
 async function init() {
   const id = new URLSearchParams(window.location.search).get('id');
@@ -91,6 +152,8 @@ async function init() {
   try {
     renderProduct(await CatalogApi.product(id));
   } catch (error) {
+    console.error(error);
+
     if (error.response && error.response.status === 404) {
       showError('Produto não encontrado.');
     } else {

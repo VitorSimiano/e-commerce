@@ -13,12 +13,13 @@
   <script src="/js/config.js" defer></script>
   <script src="/js/utils.js" defer></script>
   <script src="/js/api.js" defer></script>
+  <script src="/js/nav.js" defer></script>
   <script src="/js/product.js" defer></script>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="/index.html"> Loja de Camisas</a>
+      <a class="navbar-brand" href="/index.html">⚽ Loja de Camisas</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
               data-bs-target="#nav" aria-controls="nav" aria-label="Abrir menu">
         <span class="navbar-toggler-icon"></span>
@@ -26,6 +27,13 @@
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="/index.html">Catálogo</a></li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/cart.html">
+              🛒 Carrinho <span id="cart-badge" class="badge rounded-pill text-bg-danger d-none">0</span>
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -44,7 +52,7 @@
 
     <div id="product" class="row g-4 d-none">
       <div class="col-12 col-md-5">
-        <div class="img-placeholder rounded"></div>
+        <div class="img-placeholder rounded">👕</div>
       </div>
 
       <div class="col-12 col-md-7">
@@ -63,7 +71,11 @@
           <input id="p-quantity" type="number" class="form-control" min="1" value="1" disabled>
           <div id="p-stock-info" class="form-text">Escolha um tamanho.</div>
         </div>
-    
+
+        <button id="add-to-cart" type="button" class="btn btn-primary btn-lg" disabled>
+          Adicionar ao carrinho
+        </button>
+        <div id="cart-feedback" class="d-none" role="status"></div>
       </div>
     </div>
   </main>

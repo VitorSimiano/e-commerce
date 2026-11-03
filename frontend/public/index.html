@@ -13,7 +13,8 @@
   <script src="/js/config.js" defer></script>
   <script src="/js/utils.js" defer></script>
   <script src="/js/api.js" defer></script>
-  <script src="/js/catalog.js" defer></script>
+<script src="/js/nav.js" defer></script>
+<script src="/js/catalog.js" defer></script>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -24,11 +25,18 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="nav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="/index.html">Catálogo</a>
-          </li>
-        </ul>
+       <ul class="navbar-nav me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" aria-current="page" href="/index.html">Catálogo</a>
+  </li>
+</ul>
+<ul class="navbar-nav">
+  <li class="nav-item">
+    <a class="nav-link" href="/cart.html">
+      Carrinho <span id="cart-badge" class="badge rounded-pill text-bg-danger d-none">0</span>
+    </a>
+  </li>
+</ul>
       </div>
     </div>
   </nav>
