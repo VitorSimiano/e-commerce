@@ -11,10 +11,10 @@ class AuthService
 {
     public function register(array $data, Request $request): User
     {
-        $user = User::create($data);   // the "hashed" cast stores the password hashed
+        $user = User::create($data);   
 
         Auth::guard('web')->login($user);
-        $request->session()->regenerate();   // new session id after authenticating
+        $request->session()->regenerate();   
 
         return $user;
     }
