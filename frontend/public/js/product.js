@@ -17,7 +17,7 @@ const els = {
 
 const SIZE_ORDER = ['P', 'M', 'G', 'GG'];
 
-// the variant (product + size) currently chosen: it is what goes into the cart
+
 let selectedVariant = null;
 
 function showError(message) {
@@ -42,7 +42,6 @@ function hideFeedback() {
   els.feedback.className = 'd-none';
 }
 
-// Keeps the quantity between 1 and the stock of the chosen size
 function readQuantity() {
   const max = Number(els.quantity.max) || 1;
   const value = Math.floor(Number(els.quantity.value)) || 1;
