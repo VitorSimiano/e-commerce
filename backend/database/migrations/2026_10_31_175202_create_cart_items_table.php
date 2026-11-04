@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::create('carts', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->nullable()->unique()->constrained()->cascadeOnDelete();
-    $table->string('token', 64)->nullable()->unique();
-    $table->timestamps();
-});
+        Schema::create('carts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->unique()->constrained()->cascadeOnDelete();
+            $table->string('token', 64)->nullable()->unique();
+            $table->timestamps();
+        });
     }
 
     /**

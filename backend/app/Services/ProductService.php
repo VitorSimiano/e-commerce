@@ -11,7 +11,7 @@ class ProductService
 
     public function listAll(array $filters): LengthAwarePaginator
     {
-    
+
         $query = Product::active()->with(['category', 'variants']);
 
         if (! empty($filters['search'])) {
@@ -22,7 +22,6 @@ class ProductService
             $query->where('category_id', $filters['category_id']);
         }
 
-        
         if (! empty($filters['size'])) {
             $query->whereHas('variants', function ($variants) use ($filters) {
                 $variants->where('size', $filters['size'])
@@ -31,12 +30,11 @@ class ProductService
         }
 
         match ($filters['sort'] ?? 'newest') {
-            'price_asc'  => $query->orderBy('price'),
+            'price_asc' => $query->orderBy('price'),
             'price_desc' => $query->orderByDesc('price'),
-            default      => $query->orderByDesc('created_at'),
+            default => $query->orderByDesc('created_at'),
         };
 
-       
         $query->orderByDesc('id');
 
         $products = $query->paginate(self::PER_PAGE)->withQueryString();
@@ -46,7 +44,7 @@ class ProductService
 
     public function findById(int $id): Product
     {
-       
+
         $product = Product::active()
             ->with(['category', 'variants'])
             ->findOrFail($id);

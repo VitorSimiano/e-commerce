@@ -62,7 +62,7 @@ class CartController extends Controller
 
     private function currentUser(Request $request): ?User
     {
-    
+
         return null;
     }
 

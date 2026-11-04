@@ -16,7 +16,7 @@ class CartService
     {
         $cart = $this->findCart($user, $token);
 
-        return $this->present($cart ?? new Cart());
+        return $this->present($cart ?? new Cart);
     }
 
     public function addItem(?User $user, ?string $token, int $variantId, int $quantity): Cart
@@ -29,7 +29,6 @@ class CartService
             ]);
         }
 
-     
         $cart = DB::transaction(function () use ($user, $token, $variant, $quantity) {
             $cart = $this->findOrCreateCart($user, $token);
 
@@ -43,11 +42,11 @@ class CartService
             }
 
             if ($item) {
-                $item->update(['quantity' => $newQuantity]);   
+                $item->update(['quantity' => $newQuantity]);
             } else {
                 $cart->items()->create([
                     'product_variant_id' => $variant->id,
-                    'quantity'           => $newQuantity,
+                    'quantity' => $newQuantity,
                 ]);
             }
 
@@ -105,7 +104,6 @@ class CartService
             return null;
         }
 
-
         return Cart::where('token', $token)->whereNull('user_id')->first();
     }
 
@@ -121,25 +119,23 @@ class CartService
             return Cart::create(['user_id' => $user->id]);
         }
 
-      
         return Cart::create(['token' => Str::random(64)]);
     }
-
 
     private function present(Cart $cart): Cart
     {
         if ($cart->exists) {
             $cart->load('items.variant.product');
         } else {
-            $cart->setRelation('items', new Collection());
+            $cart->setRelation('items', new Collection);
         }
 
         $total = '0.00';
         $totalItems = 0;
 
         foreach ($cart->items as $item) {
-            $price = $item->variant->product->price;                 
-            $subtotal = bcmul($price, (string) $item->quantity, 2);   
+            $price = $item->variant->product->price;
+            $subtotal = bcmul($price, (string) $item->quantity, 2);
 
             $item->setAttribute('unit_price', $price);
             $item->setAttribute('subtotal', $subtotal);

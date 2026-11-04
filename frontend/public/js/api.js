@@ -1,8 +1,27 @@
 const CART_TOKEN_KEY = 'cart_token';
 
+
+const API_ORIGIN = new URL(window.APP_CONFIG.API_URL).origin;
+
 const api = axios.create({
   baseURL: window.APP_CONFIG.API_URL,
+  withCredentials: true,    
+  withXSRFToken: true,     
   headers: { Accept: 'application/json' },
+});
+
+function hasCsrfCookie() {
+  return document.cookie.split('; ').some((cookie) => cookie.startsWith('XSRF-TOKEN='));
+}
+
+api.interceptors.request.use(async (config) => {
+  const method = (config.method || 'get').toLowerCase();
+
+  if (method !== 'get' && !hasCsrfCookie()) {
+    await axios.get(`${API_ORIGIN}/sanctum/csrf-cookie`, { withCredentials: true });
+  }
+
+  return config;
 });
 
 const CatalogApi = {

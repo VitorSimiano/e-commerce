@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\CartController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -18,4 +19,12 @@ Route::post('cart/items', [CartController::class, 'addItem']);
 Route::patch('cart/items/{id}', [CartController::class, 'updateItem'])->whereNumber('id');
 Route::delete('cart/items/{id}', [CartController::class, 'removeItem'])->whereNumber('id');
 
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:6,1');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('me', [AuthController::class, 'me']);
+        Route::post('logout', [AuthController::class, 'logout']);
+    });
+});

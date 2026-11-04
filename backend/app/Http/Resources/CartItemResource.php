@@ -12,23 +12,23 @@ class CartItemResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-   public function toArray(Request $request): array
-{
-    return [
-        'id'                 => $this->id,
-        'product_variant_id' => $this->product_variant_id,
-        'product'            => [
-            'id'    => $this->variant->product->id,
-            'name'  => $this->variant->product->name,
-            'team'  => $this->variant->product->team,
-            'image' => $this->variant->product->image,
-        ],
-        'size'       => $this->variant->size,
-        'stock'      => $this->variant->stock,
-        'quantity'   => $this->quantity,
-        'unit_price' => $this->unit_price,
-        'subtotal'   => $this->subtotal,
-        'available'  => $this->available,
-    ];
-}
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'product_variant_id' => $this->product_variant_id,
+            'product' => [
+                'id' => $this->variant->product->id,
+                'name' => $this->variant->product->name,
+                'team' => $this->variant->product->team,
+                'image' => $this->variant->product->image,
+            ],
+            'size' => $this->variant->size,
+            'stock' => $this->variant->stock,
+            'quantity' => $this->quantity,
+            'unit_price' => $this->unit_price,
+            'subtotal' => $this->subtotal,
+            'available' => $this->available,
+        ];
+    }
 }

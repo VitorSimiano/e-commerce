@@ -10,13 +10,13 @@ class Cart extends Model
 {
     protected $fillable = ['user_id', 'token'];
 
-public function user(): BelongsTo
-{
-    return $this->belongsTo(User::class);
-}
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
-public function items(): HasMany
-{
-    return $this->hasMany(CartItem::class);
-}
+    public function items(): HasMany
+    {
+        return $this->hasMany(CartItem::class);
+    }
 }

@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-     Schema::create('cart_items', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
-    $table->unsignedInteger('quantity');
-    $table->timestamps();
+        Schema::create('cart_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('quantity');
+            $table->timestamps();
 
-    // one line per variant in each cart
-    $table->unique(['cart_id', 'product_variant_id']);
-});
+            // one line per variant in each cart
+            $table->unique(['cart_id', 'product_variant_id']);
+        });
     }
 
     /**
