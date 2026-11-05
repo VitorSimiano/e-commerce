@@ -149,3 +149,22 @@ const OrderApi = {
     api.post(`/orders/${id}/cancel`)
       .then((response) => response.data.data),
 };
+
+
+const AdminProductApi = {
+  list: (params = {}) =>
+    api.get('/admin/products', { params })
+      .then((response) => response.data),
+
+  create: (formData) =>
+    api.post('/admin/products', formData)
+      .then((response) => response.data.data),
+
+  update: (id, formData) =>
+    api.post(`/admin/products/${id}`, formData)
+      .then((response) => response.data.data),
+
+  delete: (id) =>
+    api.delete(`/admin/products/${id}`),
+};
+

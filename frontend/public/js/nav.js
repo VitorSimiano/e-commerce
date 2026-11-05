@@ -1,8 +1,8 @@
-
 const NAV_LINKS = [
   { page: 'catalog', label: 'Catálogo', href: '/index.html' },
-  { page: 'orders', label: 'Meus pedidos', href: '/orders.html', auth: true },
+  { page: 'admin-products', label: 'Administrar produtos', href: '/admin-products.html', admin: true },
 ];
+
 
 function currentPage() {
   return document.getElementById('site-nav').dataset.page;

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AdminProductController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -43,3 +44,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{id}/pay', [OrderController::class, 'pay'])->whereNumber('id');
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->whereNumber('id');
 });
+
+Route::prefix('admin')
+    ->middleware(['auth:sanctum', 'admin'])
+    ->group(function () {
+
+        Route::get('/products', [AdminProductController::class, 'index']);
+        Route::post('/products', [AdminProductController::class, 'store']);
+        Route::put('/products/{id}', [AdminProductController::class, 'update'])
+            ->whereNumber('id');
+        Route::delete('/products/{id}', [AdminProductController::class, 'destroy'])
+            ->whereNumber('id');
+
+    });
