@@ -9,19 +9,27 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-    public function register(array $data, Request $request): User
+    public function __construct(
+        private CartService $cartService
+    ) {}
+
+    public function register(array $data, ?string $cartToken, Request $request): array
     {
         $user = User::create($data);   
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();   
 
-        return $user;
+        return [
+            'user'       => $user,
+            'cart_merge' => $this->cartService->mergeGuestCart($user, $cartToken),
+        ];
     }
 
-    public function login(array $credentials, Request $request): User
+    public function login(array $credentials, ?string $cartToken, Request $request): array
     {
         if (! Auth::guard('web')->attempt($credentials)) {
+            
             throw ValidationException::withMessages([
                 'email' => ['These credentials do not match our records.'],
             ]);
@@ -29,7 +37,12 @@ class AuthService
 
         $request->session()->regenerate();
 
-        return Auth::guard('web')->user();
+        $user = Auth::guard('web')->user();
+
+        return [
+            'user'       => $user,
+            'cart_merge' => $this->cartService->mergeGuestCart($user, $cartToken),
+        ];
     }
 
     public function logout(Request $request): void

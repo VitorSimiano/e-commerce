@@ -88,19 +88,44 @@ const CartApi = {
 };
 
 // Session authentication: the identity is the session cookie, never something stored by JS
+// The guest cart travels with the login/register request so the server can merge it
+function withGuestCart(payload) {
+  const token = localStorage.getItem(CART_TOKEN_KEY);
+  return token ? { ...payload, cart_token: token } : payload;
+}
+
+// After a successful login/register the guest cart no longer exists on the server:
+// forget its token and keep the merge notices for the next page
+function finishAuth(response) {
+  localStorage.removeItem(CART_TOKEN_KEY);
+
+  const merge = response.data.cart_merge || { merged: false, adjustments: [] };
+
+  if (merge.adjustments.length > 0) {
+    setFlash('warning', [
+      'Seu carrinho de visitante foi unido ao da sua conta, com ajustes:',
+      ...merge.adjustments.map(describeAdjustment),
+    ]);
+  } else if (merge.merged) {
+    setFlash('success', ['Os itens do seu carrinho foram unidos ao carrinho da sua conta.']);
+  }
+
+  return response.data.data;
+}
+
+// Session authentication: the identity is the session cookie, never something stored by JS
 const AuthApi = {
   // 401 when nobody is logged in
   me: () => api.get('/auth/me').then((response) => response.data.data),
 
-  // a fresh CSRF cookie right before logging in or registering, as the Sanctum SPA flow asks
   register: async (payload) => {
     await fetchCsrfCookie();
-    return api.post('/auth/register', payload).then((response) => response.data.data);
+    return api.post('/auth/register', withGuestCart(payload)).then(finishAuth);
   },
 
   login: async (payload) => {
     await fetchCsrfCookie();
-    return api.post('/auth/login', payload).then((response) => response.data.data);
+    return api.post('/auth/login', withGuestCart(payload)).then(finishAuth);
   },
 
   logout: () => api.post('/auth/logout'),

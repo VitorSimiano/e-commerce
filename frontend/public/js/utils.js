@@ -73,3 +73,42 @@ function showFormErrors(form, alertBox, error) {
   alertBox.textContent = message;
   alertBox.classList.remove('d-none');
 }
+
+// A message to show on the NEXT page (it survives the redirect after login)
+const FLASH_KEY = 'flash_message';
+
+function setFlash(type, messages) {
+  sessionStorage.setItem(FLASH_KEY, JSON.stringify({ type, messages }));
+}
+
+function showFlash() {
+  const raw = sessionStorage.getItem(FLASH_KEY);
+  if (!raw) return;
+  sessionStorage.removeItem(FLASH_KEY);  
+
+  const main = document.querySelector('main');
+  if (!main) return;
+
+  const { type, messages } = JSON.parse(raw);
+  const box = el('div', `alert alert-${type} alert-dismissible fade show`);
+  box.setAttribute('role', 'status');
+
+  messages.forEach((message) => box.appendChild(el('div', '', message)));
+
+  const close = el('button', 'btn-close');
+  close.type = 'button';
+  close.setAttribute('data-bs-dismiss', 'alert');
+  close.setAttribute('aria-label', 'Fechar');
+  box.appendChild(close);
+
+  main.prepend(box);
+}
+
+
+function describeAdjustment(item) {
+  const name = `${item.product} (${item.size})`;
+
+  return item.type === 'unavailable'
+    ? `${name} não está mais disponível e não foi para o seu carrinho.`
+    : `${name}: a quantidade foi ajustada para ${item.quantity}, o máximo disponível em estoque.`;
+}

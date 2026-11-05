@@ -8,6 +8,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class AuthController extends Controller
 {
@@ -17,9 +18,13 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
-        $user = $this->authService->register($request->validated(), $request);
+        $data = $request->validated();
+        $cartToken = Arr::pull($data, 'cart_token');  
 
-        return (new UserResource($user))
+        $result = $this->authService->register($data, $cartToken, $request);
+
+        return (new UserResource($result['user']))
+            ->additional(['cart_merge' => $result['cart_merge']])
             ->response()
             ->setStatusCode(201)
             ->header('Cache-Control', 'no-store');
@@ -27,9 +32,14 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $user = $this->authService->login($request->validated(), $request);
+        $credentials = $request->validated();
+        
+        $cartToken = Arr::pull($credentials, 'cart_token');
 
-        return (new UserResource($user))
+        $result = $this->authService->login($credentials, $cartToken, $request);
+
+        return (new UserResource($result['user']))
+            ->additional(['cart_merge' => $result['cart_merge']])
             ->response()
             ->header('Cache-Control', 'no-store');
     }

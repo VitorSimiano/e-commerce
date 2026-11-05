@@ -25,6 +25,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'cart_token' => ['nullable', 'string', 'max:64'],
         ];
     }
 }

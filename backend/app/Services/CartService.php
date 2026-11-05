@@ -153,4 +153,78 @@ class CartService
 
         return $cart;
     }
+
+  
+public function mergeGuestCart(User $user, ?string $token): array
+{
+    $result = ['merged' => false, 'adjustments' => []];
+
+    if (! $token) {
+        return $result;
+    }
+
+    return DB::transaction(function () use ($user, $token, $result) {
+
+        $guestCart = Cart::where('token', $token)
+            ->whereNull('user_id')
+            ->lockForUpdate()
+            ->first();
+
+        if (! $guestCart) {
+            return $result;   
+        }
+
+        
+        $userCart = Cart::firstOrCreate(['user_id' => $user->id]);
+
+        $guestItems = $guestCart->items()->with('variant.product')->get();
+
+        foreach ($guestItems as $guestItem) {
+            $variant = $guestItem->variant;
+            $name = $variant->product->name;
+
+          
+            if (! $variant->product->is_active || $variant->stock < 1) {
+                $result['adjustments'][] = [
+                    'type'    => 'unavailable',
+                    'product' => $name,
+                    'size'    => $variant->size,
+                ];
+                continue;
+            }
+
+            $userItem = $userCart->items()->where('product_variant_id', $variant->id)->first();
+
+    
+            $wanted = ($userItem?->quantity ?? 0) + $guestItem->quantity;
+            $final = min($wanted, $variant->stock);
+
+            if ($final < $wanted) {
+                $result['adjustments'][] = [
+                    'type'      => 'adjusted',
+                    'product'   => $name,
+                    'size'      => $variant->size,
+                    'requested' => $wanted,
+                    'quantity'  => $final,
+                ];
+            }
+
+            if ($userItem) {
+                $userItem->update(['quantity' => $final]);
+            } else {
+                $userCart->items()->create([
+                    'product_variant_id' => $variant->id,
+                    'quantity'           => $final,
+                ]);
+            }
+        }
+
+       
+        $guestCart->delete();
+
+        $result['merged'] = $guestItems->isNotEmpty();
+
+        return $result;
+    });
+}
 }

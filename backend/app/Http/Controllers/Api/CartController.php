@@ -61,10 +61,9 @@ class CartController extends Controller
     }
 
     private function currentUser(Request $request): ?User
-    {
-
-        return null;
-    }
+{
+    return $request->user('sanctum');
+}
 
     private function cartToken(Request $request): ?string
     {

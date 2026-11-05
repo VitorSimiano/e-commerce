@@ -109,8 +109,10 @@ function buildUserMenu(user) {
 }
 
 async function refreshCartBadge() {
-  // no token means no guest cart yet: there is nothing to ask the server
-  if (!localStorage.getItem(CART_TOKEN_KEY)) {
+  const user = await sessionReady;
+
+  // a visitor with no token has no cart yet; a logged-in user always may have one
+  if (!user && !localStorage.getItem(CART_TOKEN_KEY)) {
     setCartBadge(0);
     return;
   }
@@ -124,6 +126,7 @@ async function refreshCartBadge() {
 }
 
 renderNav();
+showFlash();
 buildLinks(null);
 sessionReady.then((user) => {
   buildLinks(user);
