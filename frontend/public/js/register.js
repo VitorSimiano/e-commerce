@@ -12,7 +12,7 @@ registerForm.addEventListener('submit', async (event) => {
   submitButton.textContent = 'Criando conta...';
 
   try {
-    // registering also starts the session, so there is no separate login step
+
     await AuthApi.register({
       name: registerForm.elements.name.value.trim(),
       email: registerForm.elements.email.value.trim(),

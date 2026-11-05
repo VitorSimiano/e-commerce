@@ -21,7 +21,6 @@ function errorMessage(error) {
   return 'Não foi possível conectar à API. Verifique se o servidor está no ar.';
 }
 
-// The API answers validation errors in English; these are the ones the forms can produce
 const ERROR_TRANSLATIONS = [
   [/has already been taken/i, 'Este e-mail já está cadastrado.'],
   [/do not match our records/i, 'E-mail ou senha inválidos.'],
@@ -41,7 +40,7 @@ function clearFormErrors(form, alertBox) {
   alertBox.classList.add('d-none');
 }
 
-// 422: each message goes under its own field. Anything else goes to the alert box
+
 function showFormErrors(form, alertBox, error) {
   const response = error.response;
   let message = null;
@@ -74,7 +73,6 @@ function showFormErrors(form, alertBox, error) {
   alertBox.classList.remove('d-none');
 }
 
-// A message to show on the NEXT page (it survives the redirect after login)
 const FLASH_KEY = 'flash_message';
 
 function setFlash(type, messages) {

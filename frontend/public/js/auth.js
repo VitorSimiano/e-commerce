@@ -33,7 +33,6 @@ async function requireAuth() {
   return user;
 }
 
-// Hiding things from non-admins is only a convenience: the real barrier is the 403 from the server
 async function requireAdmin() {
   const user = await requireAuth();
   if (!user) return null;

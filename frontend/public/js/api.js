@@ -1,12 +1,11 @@
 const CART_TOKEN_KEY = 'cart_token';
 
-// The CSRF cookie route lives OUTSIDE /api, so the API origin is derived from the base URL
 const API_ORIGIN = new URL(window.APP_CONFIG.API_URL).origin;
 
 const api = axios.create({
   baseURL: window.APP_CONFIG.API_URL,
-  withCredentials: true,   // the browser sends the session cookie
-  withXSRFToken: true,     // axios copies the XSRF-TOKEN cookie into the X-XSRF-TOKEN header
+  withCredentials: true,  
+  withXSRFToken: true,     
   headers: { Accept: 'application/json' },
 });
 
@@ -18,7 +17,7 @@ function fetchCsrfCookie() {
   return axios.get(`${API_ORIGIN}/sanctum/csrf-cookie`, { withCredentials: true });
 }
 
-// Before any call that changes data, make sure the CSRF cookie exists
+
 api.interceptors.request.use(async (config) => {
   const method = (config.method || 'get').toLowerCase();
 
@@ -29,7 +28,7 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// 419 = stale CSRF token: refresh it once and repeat the same request
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -45,20 +44,20 @@ api.interceptors.response.use(
   },
 );
 
-// All catalog calls live here, so no other file knows URLs
+
 const CatalogApi = {
   categories: () => api.get('/categories').then((response) => response.data.data),
   products: (params) => api.get('/products', { params }).then((response) => response.data),
   product: (id) => api.get(`/products/${id}`).then((response) => response.data.data),
 };
 
-// The guest cart token travels in a header ONLY on cart calls
+
 function cartHeaders() {
   const token = localStorage.getItem(CART_TOKEN_KEY);
   return token ? { 'X-Cart-Token': token } : {};
 }
 
-// The server puts the token inside the cart it returns. This keeps the browser copy in sync
+
 function rememberCartToken(cart) {
   if (cart.token) {
     localStorage.setItem(CART_TOKEN_KEY, cart.token);
@@ -68,7 +67,6 @@ function rememberCartToken(cart) {
   return cart;
 }
 
-// Every call answers with the WHOLE updated cart: { token, items, total_items, total }
 const CartApi = {
   get: () =>
     api.get('/cart', { headers: cartHeaders() })
@@ -87,15 +85,13 @@ const CartApi = {
       .then((response) => rememberCartToken(response.data.data)),
 };
 
-// Session authentication: the identity is the session cookie, never something stored by JS
-// The guest cart travels with the login/register request so the server can merge it
+
 function withGuestCart(payload) {
   const token = localStorage.getItem(CART_TOKEN_KEY);
   return token ? { ...payload, cart_token: token } : payload;
 }
 
-// After a successful login/register the guest cart no longer exists on the server:
-// forget its token and keep the merge notices for the next page
+
 function finishAuth(response) {
   localStorage.removeItem(CART_TOKEN_KEY);
 
@@ -113,9 +109,9 @@ function finishAuth(response) {
   return response.data.data;
 }
 
-// Session authentication: the identity is the session cookie, never something stored by JS
+
 const AuthApi = {
-  // 401 when nobody is logged in
+  
   me: () => api.get('/auth/me').then((response) => response.data.data),
 
   register: async (payload) => {

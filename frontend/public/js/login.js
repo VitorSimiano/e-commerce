@@ -2,7 +2,7 @@ const loginForm = document.getElementById('login-form');
 const formAlert = document.getElementById('form-alert');
 const submitButton = document.getElementById('submit-button');
 
-// keeps ?redirect=... when moving between the login and register pages
+
 document.getElementById('register-link').href = `/register.html${window.location.search}`;
 
 loginForm.addEventListener('submit', async (event) => {
@@ -25,7 +25,7 @@ loginForm.addEventListener('submit', async (event) => {
   }
 });
 
-// someone who is already logged in has nothing to do here
+
 sessionReady.then((user) => {
   if (user) window.location.replace(redirectTarget());
 });

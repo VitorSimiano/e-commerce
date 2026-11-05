@@ -1,10 +1,6 @@
-// Links shown to everyone, plus the ones that depend on who is logged in.
-// Add each one here ONLY when its page exists: a link to nothing is a broken element.
+
 const NAV_LINKS = [
   { page: 'catalog', label: 'Catálogo', href: '/index.html' },
-  // { page: 'orders',  label: 'Meus pedidos', href: '/orders.html',  auth: true },
-  // { page: 'profile', label: 'Perfil',       href: '/profile.html', auth: true },
-  // { page: 'admin',   label: 'Painel',       href: '/admin.html',   admin: true },
 ];
 
 function currentPage() {
@@ -20,7 +16,7 @@ function setCartBadge(total) {
 }
 
 function renderNav() {
-  // static markup only: nothing coming from the API is inserted through innerHTML
+ 
   document.getElementById('site-nav').innerHTML = `
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container">
@@ -85,7 +81,7 @@ function buildUserMenu(user) {
     return;
   }
 
-  const toggle = el('a', 'nav-link dropdown-toggle', user.name);   // textContent: safe against HTML in names
+  const toggle = el('a', 'nav-link dropdown-toggle', user.name);  
   toggle.href = '#';
   toggle.setAttribute('role', 'button');
   toggle.setAttribute('data-bs-toggle', 'dropdown');
@@ -111,7 +107,7 @@ function buildUserMenu(user) {
 async function refreshCartBadge() {
   const user = await sessionReady;
 
-  // a visitor with no token has no cart yet; a logged-in user always may have one
+ 
   if (!user && !localStorage.getItem(CART_TOKEN_KEY)) {
     setCartBadge(0);
     return;
