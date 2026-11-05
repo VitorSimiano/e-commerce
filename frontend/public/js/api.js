@@ -126,3 +126,26 @@ const AuthApi = {
 
   logout: () => api.post('/auth/logout'),
 };
+
+
+const OrderApi = {
+  list: (page = 1) =>
+    api.get('/orders', { params: { page } })
+      .then((response) => response.data),
+
+  show: (id) =>
+    api.get(`/orders/${id}`)
+      .then((response) => response.data.data),
+
+  create: (shippingData) =>
+    api.post('/orders', shippingData)
+      .then((response) => response.data.data),
+
+  pay: (id) =>
+    api.post(`/orders/${id}/pay`)
+      .then((response) => response.data.data),
+
+  cancel: (id) =>
+    api.post(`/orders/${id}/cancel`)
+      .then((response) => response.data.data),
+};

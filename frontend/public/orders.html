@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meus pedidos | Loja de Camisas</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js" defer></script>
+  <script src="/js/config.js" defer></script>
+  <script src="/js/utils.js" defer></script>
+  <script src="/js/api.js" defer></script>
+  <script src="/js/auth.js" defer></script>
+  <script src="/js/nav.js" defer></script>
+  <script src="/js/orders.js" defer></script>
+</head>
+
+<body>
+  <header id="site-nav" data-page="orders"></header>
+
+  <main class="container py-4">
+    <h1 class="h3 mb-4">Meus pedidos</h1>
+
+    <div id="loading" class="text-center py-5">
+      <div class="spinner-border" role="status"></div>
+      <p class="mt-2">Carregando pedidos...</p>
+    </div>
+
+    <div id="error" class="alert alert-danger d-none"></div>
+
+    <div id="empty" class="text-center py-5 d-none">
+      <p class="lead">Você ainda não realizou nenhum pedido.</p>
+      <a href="/index.html" class="btn btn-primary">Explorar catálogo</a>
+    </div>
+
+    <div id="orders" class="d-none">
+      <div id="orders-list" class="row g-3"></div>
+
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <button id="previous" class="btn btn-outline-secondary">Anterior</button>
+        <span id="pagination-info" class="text-muted"></span>
+        <button id="next" class="btn btn-outline-secondary">Próxima</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

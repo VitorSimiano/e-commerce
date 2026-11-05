@@ -1,6 +1,7 @@
 
 const NAV_LINKS = [
   { page: 'catalog', label: 'Catálogo', href: '/index.html' },
+  { page: 'orders', label: 'Meus pedidos', href: '/orders.html', auth: true },
 ];
 
 function currentPage() {
