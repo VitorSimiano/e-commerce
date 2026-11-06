@@ -1,16 +1,16 @@
 let currentUser = null;
 
-// Resolved once the server has answered "who am I?". Pages wait for it with `await sessionReady`
+
 const sessionReady = (async () => {
   try {
     currentUser = await AuthApi.me();
   } catch (error) {
-    currentUser = null;   // 401: nobody is logged in (or the API is unreachable)
+    currentUser = null;  
   }
   return currentUser;
 })();
 
-// Where to go after logging in. Only paths inside this site are accepted (no open redirect)
+
 function redirectTarget() {
   const target = new URLSearchParams(window.location.search).get('redirect');
   return target && target.startsWith('/') && !target.startsWith('//') ? target : '/index.html';
@@ -21,7 +21,6 @@ function goToLogin() {
   window.location.replace(`/login.html?redirect=${encodeURIComponent(here)}`);
 }
 
-// For pages that need a login: `const user = await requireAuth(); if (!user) return;`
 async function requireAuth() {
   const user = await sessionReady;
 
