@@ -10,7 +10,7 @@ const els = {
   paginationInfo: document.getElementById('pagination-info'),
 };
 
-let currentPage = 1;
+let currentOrdersPage = 1;
 let lastPage = 1;
 
 const STATUS_LABELS = {
@@ -79,10 +79,10 @@ async function loadOrders() {
   els.error.classList.add('d-none');
 
   try {
-    const result = await OrderApi.list(currentPage);
+    const result = await OrderApi.list(currentOrdersPage);
     const orders = result.data || [];
 
-    if (orders.length === 0 && currentPage === 1) {
+    if (orders.length === 0 && currentOrdersPage === 1) {
       showView('empty');
       return;
     }
@@ -92,10 +92,10 @@ async function loadOrders() {
     els.list.replaceChildren(...orders.map(createOrderCard));
 
     els.paginationInfo.textContent =
-      `Página ${currentPage} de ${lastPage}`;
+      `Página ${currentOrdersPage} de ${lastPage}`;
 
-    els.previous.disabled = currentPage <= 1;
-    els.next.disabled = currentPage >= lastPage;
+    els.previous.disabled = currentOrdersPage <= 1;
+    els.next.disabled = currentOrdersPage >= lastPage;
 
     showView('orders');
   } catch (error) {
@@ -107,15 +107,15 @@ async function loadOrders() {
 }
 
 els.previous.addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--;
+  if (currentOrdersPage > 1) {
+    currentOrdersPage--;
     loadOrders();
   }
 });
 
 els.next.addEventListener('click', () => {
-  if (currentPage < lastPage) {
-    currentPage++;
+  if (currentOrdersPage < lastPage) {
+    currentOrdersPage++;
     loadOrders();
   }
 });
