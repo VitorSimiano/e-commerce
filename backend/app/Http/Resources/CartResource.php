@@ -15,7 +15,7 @@ class CartResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            // only guest carts expose their token
+    
             'token' => $this->user_id === null ? $this->token : null,
             'items' => CartItemResource::collection($this->items),
             'total_items' => $this->total_items,
