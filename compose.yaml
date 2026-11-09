@@ -22,8 +22,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       DB_HOST: mysql
     volumes:
@@ -40,8 +40,13 @@ services:
       context: ./frontend
     ports:
       - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
     environment:
-      API_URL: http://localhost:8000/api
+      API_URL: /api
+      BACKEND_HOST: api
+      BACKEND_PORT: "8000"
     volumes:
       - ./frontend/public:/usr/share/nginx/html:ro
 

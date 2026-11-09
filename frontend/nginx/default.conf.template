@@ -1,3 +1,8 @@
+upstream backend {
+    server ${BACKEND_HOST}:${BACKEND_PORT};
+    keepalive 16;
+}
+
 server {
     listen 80;
     server_name _;
@@ -5,13 +10,28 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # always revalidate, so edits show up on refresh while developing
+    client_max_body_size 5m;
+
     add_header Cache-Control "no-cache";
 
-    # runtime config built from the API_URL environment variable
     location = /js/config.js {
         default_type application/javascript;
         return 200 "window.APP_CONFIG = { API_URL: '${API_URL}' };";
+    }
+
+    location ~ ^/(api|sanctum|storage)/ {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host              $http_host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $http_host;
+        proxy_set_header Connection        "";
+
+        proxy_connect_timeout 5s;
+        proxy_read_timeout    60s;
     }
 
     location / {

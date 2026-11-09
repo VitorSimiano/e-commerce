@@ -1,6 +1,6 @@
 const CART_TOKEN_KEY = 'cart_token';
 
-const API_ORIGIN = new URL(window.APP_CONFIG.API_URL).origin;
+const API_ORIGIN = new URL(window.APP_CONFIG.API_URL, window.location.origin).origin;
 
 const api = axios.create({
   baseURL: window.APP_CONFIG.API_URL,
