@@ -16,6 +16,16 @@ const els = {
 };
 
 
+function imageUrl(path) {
+  if (!path) return null;
+
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  const cleanPath = path.replace(/^\/?storage\//, '').replace(/^\/+/, '');
+  return `${API_ORIGIN}/storage/${cleanPath}`;
+}
 
 function readStateFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -59,10 +69,32 @@ function showView(view) {
   els.pagination.classList.toggle('d-none', view !== 'grid');
 }
 
+
 function createCard(product) {
   const col = el('div', 'col');
   const card = el('div', 'card h-100 shadow-sm card-product');
-  card.appendChild(el('div', 'img-placeholder', '👕'));
+
+ const imageContainer = el('div', 'ratio ratio-1x1 bg-light');
+
+if (product.image) {
+  const img = el('img', 'w-100 h-100 object-fit-contain');
+  img.src = imageUrl(product.image);
+  img.alt = product.name;
+
+  img.onerror = () => {
+    imageContainer.replaceChildren(
+      el('div', 'd-flex align-items-center justify-content-center', '👕')
+    );
+  };
+
+  imageContainer.appendChild(img);
+} else {
+  imageContainer.appendChild(
+    el('div', 'd-flex align-items-center justify-content-center', '👕')
+  );
+}
+
+card.appendChild(imageContainer);
 
   const body = el('div', 'card-body d-flex flex-column');
   body.appendChild(el('h2', 'h6 card-title', product.name));
@@ -73,6 +105,7 @@ function createCard(product) {
     .filter((variant) => variant.stock > 0)
     .map((variant) => variant.size)
     .join(' · ');
+
   if (sizes) {
     body.appendChild(el('p', 'small mb-2', `Tamanhos: ${sizes}`));
   }
@@ -87,8 +120,10 @@ function createCard(product) {
 
   card.appendChild(body);
   col.appendChild(card);
+
   return col;
 }
+
 
 function renderProducts(products) {
   els.grid.replaceChildren(...products.map(createCard));
