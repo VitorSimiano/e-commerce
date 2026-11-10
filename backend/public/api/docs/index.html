@@ -1,0 +1,59 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da API - Loja de Camisas</title>
+
+  <link rel="stylesheet" href="/api/docs/assets/swagger-ui.css">
+</head>
+<body>
+
+    <div id="swagger-ui"></div>
+<script src="/api/docs/assets/swagger-ui-bundle.js"></script>
+
+    <script>
+        window.onload = function () {
+            SwaggerUIBundle({
+                url: "/api/docs/openapi.yaml",
+                dom_id: "#swagger-ui",
+                deepLinking: true,
+
+                presets: [
+                    SwaggerUIBundle.presets.apis
+                ],
+
+                layout: "BaseLayout",
+
+                requestInterceptor: async (request) => {
+
+                    request.credentials = "include";
+
+                    const method = (request.method || "GET").toUpperCase();
+
+                    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+
+                        await fetch("/sanctum/csrf-cookie", {
+                            credentials: "include"
+                        });
+
+                        const xsrfCookie = document.cookie
+                            .split("; ")
+                            .find(cookie => cookie.startsWith("XSRF-TOKEN="));
+
+                        if (xsrfCookie) {
+                            request.headers["X-XSRF-TOKEN"] =
+                                decodeURIComponent(xsrfCookie.split("=")[1]);
+                        }
+                    }
+
+                    return request;
+                }
+            });
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1063 @@
+
+openapi: 3.0.3
+
+info:
+  title: API - Loja de Camisas
+  version: 1.0.0
+  description: |
+    Documentação da API da loja de camisetas de times.
+
+    A autenticação utiliza sessões e cookies do Laravel Sanctum.
+    Não utiliza Bearer Token.
+
+servers:
+  - url: /api
+    description: Mesmo host da documentação e do proxy.
+
+tags:
+  - name: Autenticação
+  - name: Categorias
+  - name: Produtos
+  - name: Carrinho
+  - name: Pedidos
+  - name: Administração
+
+paths:
+
+  /sanctum/csrf-cookie:
+    get:
+      tags:
+        - Autenticação
+      summary: Inicializar cookie CSRF
+      description: Endpoint do Sanctum para inicializar a proteção CSRF.
+      servers:
+        - url: /
+      responses:
+        "204":
+          description: Cookie CSRF inicializado.
+
+  /auth/register:
+    post:
+      tags:
+        - Autenticação
+      summary: Registrar usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name:
+                  type: string
+                  example: João Silva
+                email:
+                  type: string
+                  format: email
+                  example: joao@email.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                password_confirmation:
+                  type: string
+                  format: password
+                cart_token:
+                  type: string
+                  nullable: true
+      responses:
+        "201":
+          description: Usuário registrado e sessão iniciada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/login:
+    post:
+      tags:
+        - Autenticação
+      summary: Realizar login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                cart_token:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Login realizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/me:
+    get:
+      tags:
+        - Autenticação
+      summary: Consultar usuário autenticado
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Dados do usuário.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags:
+        - Autenticação
+      summary: Encerrar sessão
+      security:
+        - cookieAuth: []
+      responses:
+        "204":
+          description: Sessão encerrada.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /categories:
+    get:
+      tags:
+        - Categorias
+      summary: Listar categorias
+      responses:
+        "200":
+          description: Lista de categorias.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryCollection"
+
+  /products:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: string
+            enum: [P, M, G, GG]
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Produtos encontrados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductCollection"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /products/{id}:
+    get:
+      tags:
+        - Produtos
+      summary: Consultar produto
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Produto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /cart:
+    get:
+      tags:
+        - Carrinho
+      summary: Consultar carrinho
+      description: |
+        Usuários autenticados utilizam seu carrinho de usuário.
+        Visitantes utilizam o cabeçalho X-Cart-Token.
+      parameters:
+        - $ref: "#/components/parameters/CartToken"
+      security:
+        - cookieAuth: []
+        - {}
+      responses:
+        "200":
+          description: Carrinho e seus itens.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+
+  /cart/items:
+    post:
+      tags:
+        - Carrinho
+      summary: Adicionar item ao carrinho
+      parameters:
+        - $ref: "#/components/parameters/CartToken"
+      security:
+        - cookieAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_variant_id, quantity]
+              properties:
+                product_variant_id:
+                  type: integer
+                  example: 1
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 99
+                  example: 2
+      responses:
+        "200":
+          description: Carrinho atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /cart/items/{id}:
+    patch:
+      tags:
+        - Carrinho
+      summary: Atualizar quantidade de item
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/CartToken"
+      security:
+        - cookieAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 0
+                  maximum: 99
+                  example: 3
+      responses:
+        "200":
+          description: Carrinho atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      tags:
+        - Carrinho
+      summary: Remover item do carrinho
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/CartToken"
+      security:
+        - cookieAuth: []
+        - {}
+      responses:
+        "200":
+          description: Carrinho atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /orders:
+    get:
+      tags:
+        - Pedidos
+      summary: Listar pedidos do usuário
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Lista paginada de pedidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderCollection"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags:
+        - Pedidos
+      summary: Criar pedido
+      description: Cria um pedido a partir do carrinho do usuário autenticado.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShippingRequest"
+      responses:
+        "200":
+          description: Pedido criado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          description: Conflito relacionado ao carrinho ou estoque.
+
+  /orders/{id}:
+    get:
+      tags:
+        - Pedidos
+      summary: Consultar pedido
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Pedido encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "403":
+          description: Sem permissão para consultar este pedido.
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /orders/{id}/pay:
+    post:
+      tags:
+        - Pedidos
+      summary: Marcar pedido como pago
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Pedido atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "403":
+          description: Sem permissão.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Pedido não está aguardando pagamento.
+
+  /orders/{id}/cancel:
+    post:
+      tags:
+        - Pedidos
+      summary: Cancelar pedido
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Pedido cancelado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "403":
+          description: Sem permissão.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Pedido não pode ser cancelado.
+
+  /admin/products:
+    get:
+      tags:
+        - Administração
+      summary: Listar produtos administrativos
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Lista paginada de produtos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductCollection"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Acesso exclusivo de administrador.
+
+    post:
+      tags:
+        - Administração
+      summary: Cadastrar produto
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ProductRequest"
+      responses:
+        "201":
+          description: Produto cadastrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "403":
+          description: Acesso exclusivo de administrador.
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /admin/products/{id}:
+    put:
+      tags:
+        - Administração
+      summary: Atualizar produto
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ProductRequest"
+      responses:
+        "200":
+          description: Produto atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "403":
+          description: Acesso exclusivo de administrador.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      tags:
+        - Administração
+      summary: Excluir produto
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Produto excluído.
+        "403":
+          description: Acesso exclusivo de administrador.
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/categories:
+    post:
+      tags:
+        - Administração
+      summary: Cadastrar categoria
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+      responses:
+        "201":
+          description: Categoria cadastrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "403":
+          description: Acesso exclusivo de administrador.
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /admin/categories/{id}:
+    put:
+      tags:
+        - Administração
+      summary: Atualizar categoria
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+      responses:
+        "200":
+          description: Categoria atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "403":
+          description: Acesso exclusivo de administrador.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      tags:
+        - Administração
+      summary: Excluir categoria
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Categoria excluída.
+        "403":
+          description: Acesso exclusivo de administrador.
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/orders:
+    get:
+      tags:
+        - Administração
+      summary: Listar todos os pedidos
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [awaiting_payment, paid, shipped, delivered, cancelled]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Lista paginada de pedidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderCollection"
+        "403":
+          description: Acesso exclusivo de administrador.
+
+  /admin/orders/{id}/status:
+    patch:
+      tags:
+        - Administração
+      summary: Atualizar status do pedido
+      description: "Transições permitidas pelo serviço: paid para shipped e shipped para delivered."
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [awaiting_payment, paid, shipped, delivered, cancelled]
+      responses:
+        "200":
+          description: Pedido atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "403":
+          description: Acesso exclusivo de administrador.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          description: Transição de status não permitida.
+
+components:
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: laravel_session
+      description: Sessão Laravel mantida pelo navegador.
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    CartToken:
+      name: X-Cart-Token
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Token do carrinho de visitante.
+
+  responses:
+    Unauthorized:
+      description: Usuário não autenticado.
+
+    NotFound:
+      description: Registro não encontrado.
+
+    ValidationError:
+      description: Erro de validação.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+
+  schemas:
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+
+    UserResponse:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            cart_merge:
+              type: object
+              description: Resultado da tentativa de mesclar o carrinho de visitante.
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        league:
+          type: string
+        flag:
+          type: string
+
+    CategoryRequest:
+      type: object
+      required: [name, league, flag]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        league:
+          type: string
+          maxLength: 255
+        flag:
+          type: string
+          maxLength: 255
+
+    CategoryResponse:
+      allOf:
+        - $ref: "#/components/schemas/Category"
+
+    CategoryCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+
+    Variant:
+      type: object
+      properties:
+        id:
+          type: integer
+        size:
+          type: string
+          enum: [P, M, G, GG]
+        stock:
+          type: integer
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        team:
+          type: string
+        season:
+          type: string
+        description:
+          type: string
+        price:
+          type: string
+        image:
+          type: string
+          nullable: true
+        category_id:
+          type: integer
+        is_active:
+          type: boolean
+        in_stock:
+          type: boolean
+        category:
+          allOf:
+            - $ref: "#/components/schemas/Category"
+          nullable: true
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Variant"
+        created_at:
+          type: string
+          format: date-time
+
+    ProductRequest:
+      type: object
+      required:
+        - category_id
+        - name
+        - team
+        - season
+        - description
+        - price
+        - is_active
+        - variants
+      properties:
+        category_id:
+          type: integer
+        name:
+          type: string
+        team:
+          type: string
+        season:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0.01
+        is_active:
+          type: boolean
+        image:
+          type: string
+          format: binary
+        variants:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            type: object
+            required: [size, stock]
+            properties:
+              size:
+                type: string
+                enum: [P, M, G, GG]
+              stock:
+                type: integer
+                minimum: 0
+
+    ProductResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Product"
+
+    ProductCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        links:
+          type: object
+        meta:
+          type: object
+
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        product_variant_id:
+          type: integer
+        product:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            team:
+              type: string
+            image:
+              type: string
+              nullable: true
+        size:
+          type: string
+        stock:
+          type: integer
+        quantity:
+          type: integer
+        unit_price:
+          type: string
+        subtotal:
+          type: string
+        available:
+          type: boolean
+
+    CartResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              nullable: true
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/CartItem"
+            total_items:
+              type: integer
+            total:
+              type: string
+
+    ShippingRequest:
+      type: object
+      required:
+        - shipping_name
+        - shipping_phone
+        - shipping_postal_code
+        - shipping_address
+        - shipping_number
+        - shipping_neighborhood
+        - shipping_city
+        - shipping_state
+      properties:
+        shipping_name:
+          type: string
+          maxLength: 255
+        shipping_phone:
+          type: string
+          maxLength: 30
+        shipping_postal_code:
+          type: string
+          maxLength: 20
+        shipping_address:
+          type: string
+          maxLength: 255
+        shipping_number:
+          type: string
+          maxLength: 30
+        shipping_complement:
+          type: string
+          nullable: true
+        shipping_neighborhood:
+          type: string
+        shipping_city:
+          type: string
+        shipping_state:
+          type: string
+          minLength: 2
+          maxLength: 2
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        product_id:
+          type: integer
+        product_variant_id:
+          type: integer
+          nullable: true
+        product_name:
+          type: string
+        team:
+          type: string
+        size:
+          type: string
+        unit_price:
+          type: string
+        quantity:
+          type: integer
+        subtotal:
+          type: string
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [awaiting_payment, paid, shipped, delivered, cancelled]
+        total:
+          type: string
+        paid_at:
+          type: string
+          nullable: true
+          format: date-time
+        user:
+          type: object
+          nullable: true
+        shipping:
+          type: object
+          properties:
+            name:
+              type: string
+            phone:
+              type: string
+            postal_code:
+              type: string
+            address:
+              type: string
+            number:
+              type: string
+            complement:
+              type: string
+              nullable: true
+            neighborhood:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        created_at:
+          type: string
+          format: date-time
+
+    OrderResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Order"
+
+    OrderCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        links:
+          type: object
+        meta:
+          type: object
