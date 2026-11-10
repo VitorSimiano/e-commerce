@@ -21,7 +21,11 @@ const els = {
   category: document.getElementById('category_id'),
   image: document.getElementById('image'),
   currentImage: document.getElementById('current-image'),
-};
+};  
+
+
+
+
 
 const modal = new bootstrap.Modal(document.getElementById('product-modal'));
 

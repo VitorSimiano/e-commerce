@@ -6,6 +6,7 @@ const els = {
   name: document.getElementById('p-name'),
   team: document.getElementById('p-team'),
   price: document.getElementById('p-price'),
+   image: document.getElementById('p-image'),
   description: document.getElementById('p-description'),
   availability: document.getElementById('p-availability'),
   sizes: document.getElementById('p-sizes'),
@@ -17,6 +18,16 @@ const els = {
 
 const SIZE_ORDER = ['P', 'M', 'G', 'GG'];
 
+function imageUrl(path) {
+  if (!path) return null;
+
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  const cleanPath = path.replace(/^\/?storage\//, '').replace(/^\/+/, '');
+  return `${API_ORIGIN}/storage/${cleanPath}`;
+}
 
 let selectedVariant = null;
 
@@ -87,10 +98,23 @@ function renderSizes(variants) {
 
 function renderProduct(product) {
   document.title = `${product.name} | Loja de Camisas`;
+    if (product.image) {
+    const img = el('img', 'img-fluid w-100 h-100 object-fit-contain rounded');
+
+    img.src = imageUrl(product.image);
+    img.alt = product.name;
+
+    img.onerror = () => {
+      els.image.textContent = '👕';
+    };
+
+    els.image.replaceChildren(img);
+  }
   els.category.textContent = `${product.category.flag} ${product.category.name} · ${product.category.league}`;
   els.name.textContent = product.name;
   els.team.textContent = `${product.team} · ${product.season}`;
   els.price.textContent = formatPrice(product.price);
+
   els.description.textContent = product.description || '';
 
   els.availability.replaceChildren(

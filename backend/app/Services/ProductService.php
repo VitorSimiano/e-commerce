@@ -72,10 +72,10 @@ public function listForAdmin(array $filters): LengthAwarePaginator
 
 public function create(array $data): Product
 {
-    $image = $data['image'] ?? null;
+
     $variants = $data['variants'];
 
-    unset($data['image'], $data['variants']);
+    unset($data['variants']);
 
     $product = DB::transaction(function () use ($data, $variants) {
         $product = Product::create($data);
@@ -87,11 +87,7 @@ public function create(array $data): Product
         return $product;
     });
 
-    if ($image) {
-        $product->update([
-            'image' => $image->store('products', 'public'),
-        ]);
-    }
+
 
     return $product->load(['category', 'variants']);
 }
@@ -100,10 +96,10 @@ public function update(int $id, array $data): Product
 {
     $product = Product::findOrFail($id);
 
-    $image = $data['image'] ?? null;
+
     $variants = $data['variants'];
 
-    unset($data['image'], $data['variants']);
+    unset($data['variants']);
 
     DB::transaction(function () use ($product, $data, $variants) {
         $product->update($data);
@@ -116,17 +112,6 @@ public function update(int $id, array $data): Product
         }
     });
 
-    if ($image) {
-        $oldImage = $product->image;
-        $newImage = $image->store('products', 'public');
-
-        $product->update(['image' => $newImage]);
-
-        if ($oldImage) {
-            Storage::disk('public')->delete($oldImage);
-        }
-    }
-
     return $product->load(['category', 'variants']);
 }
 
@@ -134,13 +119,8 @@ public function delete(int $id): void
 {
     $product = Product::findOrFail($id);
 
-    $image = $product->image;
-
     $product->delete();
 
-    if ($image) {
-        Storage::disk('public')->delete($image);
-    }
 }
 
 }
