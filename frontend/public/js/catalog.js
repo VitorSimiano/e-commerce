@@ -74,27 +74,19 @@ function createCard(product) {
   const col = el('div', 'col');
   const card = el('div', 'card h-100 shadow-sm card-product');
 
- const imageContainer = el('div', 'ratio ratio-1x1 bg-light');
+  if (product.image) {
+    const img = el('img', 'product-image');
+    img.src = imageUrl(product.image);
+    img.alt = product.name;
 
-if (product.image) {
-  const img = el('img', 'w-100 h-100 object-fit-contain');
-  img.src = imageUrl(product.image);
-  img.alt = product.name;
+    img.onerror = () => {
+      img.replaceWith(el('div', 'img-placeholder', '👕'));
+    };
 
-  img.onerror = () => {
-    imageContainer.replaceChildren(
-      el('div', 'd-flex align-items-center justify-content-center', '👕')
-    );
-  };
-
-  imageContainer.appendChild(img);
-} else {
-  imageContainer.appendChild(
-    el('div', 'd-flex align-items-center justify-content-center', '👕')
-  );
-}
-
-card.appendChild(imageContainer);
+    card.appendChild(img);
+  } else {
+    card.appendChild(el('div', 'img-placeholder', '👕'));
+  }
 
   const body = el('div', 'card-body d-flex flex-column');
   body.appendChild(el('h2', 'h6 card-title', product.name));

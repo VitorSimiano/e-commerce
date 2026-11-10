@@ -13,6 +13,13 @@ class OrderResource extends JsonResource
             'id' => $this->id,
             'status' => $this->status,
             'total' => $this->total,
+            'paid_at' => $this->paid_at,
+
+            'user' => $this->whenLoaded('user', fn () => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+            ]),
 
             'shipping' => [
                 'name' => $this->shipping_name,
@@ -31,4 +38,7 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at,
         ];
     }
+
+
+  
 }

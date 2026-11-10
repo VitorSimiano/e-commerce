@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Product;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use App\Models\OrderItem;
 
 class ProductService
 {
@@ -115,12 +115,17 @@ public function update(int $id, array $data): Product
     return $product->load(['category', 'variants']);
 }
 
-public function delete(int $id): void
-{
-    $product = Product::findOrFail($id);
+      public function delete(int $id): void
+    {
+        $product = Product::findOrFail($id);
 
-    $product->delete();
+        if (OrderItem::where('product_id', $product->id)->exists()) {
+            $product->update(['is_active' => false]);
 
-}
+            return;
+        }
 
+        $product->delete();
+
+    }
 }

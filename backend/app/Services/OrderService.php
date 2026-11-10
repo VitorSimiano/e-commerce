@@ -12,6 +12,11 @@ use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
+     private const TRANSITIONS = [
+        'paid' => ['shipped'],
+        'shipped' => ['delivered'],
+    ];
+
     public function create(User $user, array $shippingData): Order
     {
         return DB::transaction(function () use ($user, $shippingData) {
@@ -108,67 +113,62 @@ class OrderService
         });
     }
 
-public function pay(User $user, int $orderId): Order
-{
-    return DB::transaction(function () use ($user, $orderId) {
+    public function pay(User $user, int $orderId): Order
+    {
+        return DB::transaction(function () use ($user, $orderId) {
 
-        $order = Order::where('user_id', $user->id)
-            ->lockForUpdate()
-            ->findOrFail($orderId);
+            $order = Order::query()->lockForUpdate()->findOrFail($orderId);
 
-        if ($order->status !== 'awaiting_payment') {
-            throw ValidationException::withMessages([
-                'order' => ['This order cannot be paid.'],
+            if ($order->user_id !== $user->id) {
+                abort(403, 'Forbidden.');
+            }
+
+            if ($order->status !== 'awaiting_payment') {
+                abort(409, 'This order is not awaiting payment.');
+            }
+
+            $order->update([
+                'status' => 'paid',
+                'paid_at' => now(),
             ]);
-        }
 
-        $order->update([
-            'status' => 'paid',
-        ]);
+            return $order->load('items');
+        });
+    }
 
-        return $order->load('items');
-    });
-}
+    public function cancel(User $user, int $orderId): Order
+    {
+        return DB::transaction(function () use ($user, $orderId) {
 
-public function cancel(User $user, int $orderId): Order
-{
-    return DB::transaction(function () use ($user, $orderId) {
+            $order = Order::query()->lockForUpdate()->findOrFail($orderId);
 
-        
-        $order = Order::where('user_id', $user->id)
-            ->lockForUpdate()
-            ->findOrFail($orderId);
+            if ($order->user_id !== $user->id && ! $user->isAdmin()) {
+                abort(403, 'Forbidden.');
+            }
 
-        if ($order->status !== 'awaiting_payment') {
-            throw ValidationException::withMessages([
-                'order' => ['This order cannot be cancelled.'],
-            ]);
-        }
+            if ($order->status !== 'awaiting_payment') {
+                abort(409, 'This order cannot be cancelled.');
+            }
 
-        $orderItems = $order->items;
+            foreach ($order->items as $item) {
+                if ($item->product_variant_id !== null) {
+                    $variant = ProductVariant::whereKey($item->product_variant_id)
+                        ->lockForUpdate()
+                        ->first();
 
-        foreach ($orderItems as $item) {
-
-            if ($item->product_variant_id !== null) {
-                $variant = ProductVariant::whereKey($item->product_variant_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($variant) {
-                    $variant->increment('stock', $item->quantity);
+                    if ($variant) {
+                        $variant->increment('stock', $item->quantity);
+                    }
                 }
             }
-        }
 
-      
-        $order->update([
-            'status' => 'cancelled',
-        ]);
+            $order->update(['status' => 'cancelled']);
 
-        return $order->load('items');
-    });
-}
+            return $order->load('items');
+        });
+    }
 
+  
 public function listForUser(User $user)
 {
     return Order::where('user_id', $user->id)
@@ -177,12 +177,43 @@ public function listForUser(User $user)
         ->paginate(10);
 }
 
-public function findForUser(User $user, int $orderId): Order
-{
-    return Order::where('user_id', $user->id)
-        ->with('items')
-        ->findOrFail($orderId);
-}
+  public function findForUser(User $user, int $orderId): Order
+    {
+        $order = Order::with('items')->findOrFail($orderId);
 
+        if ($order->user_id !== $user->id && ! $user->isAdmin()) {
+            abort(403, 'Forbidden.');
+        }
+
+        return $order;
+    }
+
+    
+    public function listForAdmin(?string $status)
+    {
+        return Order::with(['items', 'user'])
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    public function updateStatus(int $orderId, string $newStatus): Order
+    {
+        return DB::transaction(function () use ($orderId, $newStatus) {
+
+            $order = Order::query()->lockForUpdate()->findOrFail($orderId);
+
+            $allowed = self::TRANSITIONS[$order->status] ?? [];
+
+            if (! in_array($newStatus, $allowed, true)) {
+                abort(409, "Cannot change status from {$order->status} to {$newStatus}.");
+            }
+
+            $order->update(['status' => $newStatus]);
+
+            return $order->load('items');
+        });
+    }
 
 }
