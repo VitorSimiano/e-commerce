@@ -1,45 +1,62 @@
 services:
   mysql:
     image: mysql:8.4
+    restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: loja_camisas
-      MYSQL_USER: loja_camisas
-      MYSQL_PASSWORD: loja_camisas
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-rootpassword}"
+      MYSQL_DATABASE: "${DB_DATABASE:-loja_camisas}"
+      MYSQL_USER: "${DB_USERNAME:-loja_camisas}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-loja_camisas}"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--protocol=tcp"]
       interval: 5s
-      retries: 10
+      timeout: 3s
+      retries: 20
+      start_period: 20s
 
   api:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
+    restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
     expose:
       - "8000"
     environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: "${APP_URL:-http://localhost:8080}"
+      DB_CONNECTION: mysql
       DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: "${DB_DATABASE:-loja_camisas}"
+      DB_USERNAME: "${DB_USERNAME:-loja_camisas}"
+      DB_PASSWORD: "${DB_PASSWORD:-loja_camisas}"
     volumes:
       - ./backend:/app
+      - backend_vendor:/app/vendor
+    command: >
+      sh -c "composer install --no-interaction --prefer-dist
+      && php artisan serve --host=0.0.0.0 --port=8000"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/up"]
       interval: 5s
       timeout: 3s
       retries: 20
-      start_period: 30s
+      start_period: 60s
 
   frontend:
     build:
       context: ./frontend
+    restart: unless-stopped
     ports:
-      - "8080:80"
+      - "${FRONTEND_PORT:-8080}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -52,3 +69,4 @@ services:
 
 volumes:
   mysql_data:
+  backend_vendor:
