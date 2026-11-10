@@ -198,22 +198,6 @@ public function listForUser(User $user)
             ->withQueryString();
     }
 
-    public function updateStatus(int $orderId, string $newStatus): Order
-    {
-        return DB::transaction(function () use ($orderId, $newStatus) {
-
-            $order = Order::query()->lockForUpdate()->findOrFail($orderId);
-
-            $allowed = self::TRANSITIONS[$order->status] ?? [];
-
-            if (! in_array($newStatus, $allowed, true)) {
-                abort(409, "Cannot change status from {$order->status} to {$newStatus}.");
-            }
-
-            $order->update(['status' => $newStatus]);
-
-            return $order->load('items');
-        });
-    }
+ 
 
 }
